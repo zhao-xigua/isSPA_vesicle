@@ -27,7 +27,7 @@ def main():
     particle_orients, header_lines  = parse_star_file(args.star_path)
     all_names = list(particle_orients.keys())
     
-    # 如果用户指定，则优先使用用户输入
+    # Use user input if provided
     if args.prefix is not None or args.suffix is not None:
 
         if args.prefix is None or args.suffix is None:

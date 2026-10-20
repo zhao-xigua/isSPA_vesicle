@@ -6,7 +6,6 @@ from image_processing import write_mrc, center_clip_pad0
 
 
 def main():
-    # 1. 命令行参数解析
     parser = argparse.ArgumentParser(description="According to mask.txt generate filled mask image.")
     parser.add_argument('--mask_txt', type=str, required=True, help='Path to mask txt directory')
     parser.add_argument('--filled_mask_mrc', type=str, required=True, help='Path to filled mask output')
@@ -69,9 +68,9 @@ def draw_elliptical_disks(ellipse_list, image_size_x, image_size_y, thick=2):
         center_int = (int(cx), int(cy))
         axes_int = (int(a), int(b))
         
-        #radius_pix = radius_pix + (thick/2)//2   #因为圆环的厚度在ms5的图中是5pix，因此在ms10图中就是5/2，又因为(5/2)是分别加在圆环两侧，故(5/2)//2
+        #radius_pix = radius_pix + (thick/2)//2   
         
-        #cv2.circle(img, center, int(radius_pix), color=255, thickness=-1)   # cv2.circle绘图默认坐标原点在左上角
+        #cv2.circle(img, center, int(radius_pix), color=255, thickness=-1)   # cv2.circle, the default origin is at the top-left corner
         
         cv2.ellipse(img, center_int, axes_int, angle, 0, 360, color=255, thickness=-1)
         

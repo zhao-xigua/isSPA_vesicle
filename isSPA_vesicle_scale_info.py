@@ -2,7 +2,7 @@ import argparse
 import re
 
 def process_line(line, clip_w, clip_h, out_w, out_h):
-    # 匹配基本元素
+    # Match basic elements
     pattern = r'^(.*?)\s+image_size=(\d+),(\d+)\s+center=(\d+\.?\d*),(\d+\.?\d*)\s+radius=(\d+\.?\d*),(\d+\.?\d*)\s+angle=(\d+\.?\d*)\s+axis_ratio=(\d+\.?\d*)\s+type=(\w+)$'
     match = re.match(pattern, line.strip())
     
@@ -20,7 +20,7 @@ def process_line(line, clip_w, clip_h, out_w, out_h):
     radius_x = float(radius_x)
     radius_y = float(radius_y)
     
-    # 计算变换
+    # Compute transformation
     deltax = (int(width) - clip_w) / 2
     deltay = (int(height) - clip_h) / 2
     
@@ -29,22 +29,22 @@ def process_line(line, clip_w, clip_h, out_w, out_h):
     
     # NOTE: empirical scaling factor based on ms10->micrograph mapping
     new_center_x = (center_x - deltax) * 10 + margin_x     
-    new_center_y = (center_y - deltay) * 10 + margin_y    # 409直接乘10是4090，可是当时clip时沿着中心clip，两边各自丢掉了3个像素，所以+3
+    new_center_y = (center_y - deltay) * 10 + margin_y    # 409 multiplied by 10 is 4090. However, clipping was performed about the center at that time, discarding 3 pixels on each side, hence the +3 offset.
     new_radius_x = radius_x * 10
     new_radius_y = radius_y * 10
     
-    # 新的image_size
+    # new image_size
     new_image_size = f"image_size={out_w},{out_h}"
     
-    # 重新组合成一行
+    # Recombine into a single line
     new_line = f"{filename}\t{new_image_size}\tcenter={new_center_x:.2f},{new_center_y:.2f}\tradius={new_radius_x:.2f},{new_radius_y:.2f}\tangle={angle}\taxis_ratio={ratio}\ttype={types}"
     
     return new_line
 
 def main():
-    parser = argparse.ArgumentParser(description="处理中心坐标和半径并输出新文件")
-    parser.add_argument('input_file', help="输入文件路径")
-    parser.add_argument('output_file', help="输出文件路径")
+    parser = argparse.ArgumentParser(description="Process center coordinates and radius, then output a new file")
+    parser.add_argument('input_file', help="Input .txt file path")
+    parser.add_argument('output_file', help="Output .txt file path")
     
     parser.add_argument('--ms10_mic_size', type=int, nargs=2, required=True, metavar=('clip_w', 'clip_h'), help="ms10 size, e.g. --ms10_size 409 409")
     parser.add_argument('--micrograph_size', type=int, nargs=2, required=True, metavar=('out_w', 'out_h'), help="micrograph size, e.g. --micrograph_size 4096 4096")
@@ -59,7 +59,7 @@ def main():
     
     processed_lines = []
     for line in lines:
-        if line.strip():  # 跳过空行
+        if line.strip():  
             new_line = process_line(line, clip_w, clip_h, out_w, out_h)
             if new_line:
                 processed_lines.append(new_line)
@@ -68,7 +68,7 @@ def main():
         for line in processed_lines:
             f.write(line + '\n')
     
-    print(f"处理完成！结果保存到: {args.output_file}")
+    print(f"Processing completed! Results saved to: {args.output_file}")
 
 if __name__ == "__main__":
     main()

@@ -14,7 +14,7 @@ import argparse
 import random
 
 
-# --- 1. 数据集定义 ---
+# --- 1. Dataset ---
 class VesicleDataset(Dataset):
     def __init__(self, mrc_dir, mask_dir, transform=None):
         self.mrc_paths = sorted([os.path.join(mrc_dir, f) for f in os.listdir(mrc_dir) if f.endswith('.mrc')])
@@ -25,12 +25,12 @@ class VesicleDataset(Dataset):
         return len(self.mrc_paths)
 
     def __getitem__(self, idx):
-        # 读取 MRC
+        # read MRC
         with mrcfile.open(self.mrc_paths[idx], permissive=True) as mrc:
             image = mrc.data
         image = (image - image.min()) / (image.max() - image.min())
         
-        # 读取 Mask
+        # read Mask
         with mrcfile.open(self.mask_paths[idx], permissive=True) as mrc:
             mask = mrc.data
         mask = (mask / 255.0).astype(np.float32)
@@ -45,13 +45,12 @@ class VesicleDataset(Dataset):
         if mask.ndim == 2:
             mask = mask.unsqueeze(0)
         
-        # 解决负stride的问题
         image = image.clone()
         mask = mask.clone()
         #print(image.shape)
         
-        #print("Image shape:", image.shape)  # 应该是 torch.Size([1, 512, 512])
-        #print("Mask shape:", mask.shape)    # 应该是 torch.Size([1, 512, 512])
+        #print("Image shape:", image.shape)  #  torch.Size([1, 512, 512])
+        #print("Mask shape:", mask.shape)    #  torch.Size([1, 512, 512])
         #print("Unique values in mask:", np.unique(augmented['mask']))
 
         return image, mask
@@ -117,12 +116,12 @@ class CombinedLoss(nn.Module):
 
     def forward(self, logits, targets):
         bce_loss = self.bce(logits, targets)
-        preds = torch.sigmoid(logits)  # 因为 Dice Loss 需要概率
+        preds = torch.sigmoid(logits)  
         d_loss = dice_loss(preds, targets)
         return bce_loss + d_loss
 
 
-# --- 3. Dice 系数与验证函数 ---
+# --- 3. Dice coefficient and validation Function ---
 def dice_coefficient(pred, target, threshold=0.5):
     pred = (pred > threshold).float()
     intersection = (pred * target).sum(dim=(2, 3))
@@ -130,7 +129,7 @@ def dice_coefficient(pred, target, threshold=0.5):
     dice = (2. * intersection + 1e-8) / (union + 1e-8)
     return dice.mean().item()
 
-# Dice Loss 函数
+
 def dice_loss(pred, target, smooth=1e-6):
     pred = pred.contiguous()
     target = target.contiguous()
@@ -162,7 +161,7 @@ def evaluate(model, dataloader, device, criterion):
     return avg_loss, avg_dice
 
 
-# --- 4. 训练函数 ---
+# --- 4. Train ---
 def train(model, train_loader, val_loader, device, pos_weight, epochs):
     model.to(device)
     criterion = CombinedLoss(pos_weight=pos_weight)
@@ -207,7 +206,7 @@ def train(model, train_loader, val_loader, device, pos_weight, epochs):
             #model_name = f"unet_model_batch{batch_size}_dice{val_dice:.4f}.pth"
             torch.save(model.state_dict(), "unet_model.pth")
             
-            # 保存模型信息
+            # save model information
             with open("best_model_info.txt", "w") as f:
                 f.write(f"Best Epoch: {epoch+1}\n")
                 f.write(f"Best Val Dice: {val_dice:.6f}\n")
@@ -225,7 +224,7 @@ def train(model, train_loader, val_loader, device, pos_weight, epochs):
     #torch.save(model.state_dict(), "unet_model.pth")
     
     
-    # ---------- 绘制曲线 ----------
+    # ---------- drawing curves ----------
     #epochs_range = range(1, epochs + 1)
     epochs_range = range(1, len(train_losses)+1)
     plt.figure(figsize=(15, 5))
@@ -256,7 +255,7 @@ def train(model, train_loader, val_loader, device, pos_weight, epochs):
     plt.show()
     
 
-# --- 5. 预测与保存 ---
+# --- 5. Predictoion and save ---
 def predict_and_save(model, dataloader, device, output_dir):
     os.makedirs(output_dir, exist_ok=True)
     model.eval()
@@ -266,7 +265,6 @@ def predict_and_save(model, dataloader, device, output_dir):
             pred = torch.sigmoid(model(image))
             pred_mask = (pred > 0.5).float().squeeze().cpu().numpy()
             
-            # 保存为 .mrc 格式
             with mrcfile.new(os.path.join(output_dir, f"pred_{i:03d}.mrc"), overwrite=True) as mrc:
                 mrc.set_data(pred_mask.astype(np.float32))
             #result = Image.fromarray(pred_mask.astype(np.uint8))
@@ -275,12 +273,12 @@ def predict_and_save(model, dataloader, device, output_dir):
 def predict_on_new_images(model, predict_dir, output_dir, device):
     model.eval()
 
-    # 2. 遍历 predict 目录下的 mrc 文件
+    
     mrc_paths = sorted([os.path.join(predict_dir, f) for f in os.listdir(predict_dir) if f.endswith('.mrc')])
 
     os.makedirs(output_dir, exist_ok=True)
 
-    # 3. 定义预测数据的预处理（保持一致）
+    
     predict_transform = A.Compose([
         A.Normalize(mean=(0.0,), std=(1.0,)),
         ToTensorV2(),
@@ -288,28 +286,27 @@ def predict_on_new_images(model, predict_dir, output_dir, device):
 
     with torch.no_grad():
         for i, mrc_path in enumerate(mrc_paths):
-            # 读入MRC
+            
             with mrcfile.open(mrc_path, permissive=True) as mrc:
                 image = mrc.data
             image = (image - image.min()) / (image.max() - image.min())
 
             augmented = predict_transform(image=image)
-            image_tensor = augmented['image'].unsqueeze(0).to(device)  # 加上batch维度
+            image_tensor = augmented['image'].unsqueeze(0).to(device)  # add batch dimension
 
-            # 预测
+            # prediction
             pred = model(image_tensor)
             pred_mask = (torch.sigmoid(pred) > 0.5).float().squeeze().cpu().numpy()
 
-            # 保存结果
+            # save results
             output_path = os.path.join(output_dir, os.path.basename(mrc_path))
             with mrcfile.new(output_path, overwrite=True) as mrc:
                 mrc.set_data(pred_mask.astype(np.float32))
                 
             print(f"Saved prediction: {output_path}")
 
-# --- 6. 主函数 ---
+# --- 6. Main  ---
 def main():
-    # 1. 命令行参数解析
     parser = argparse.ArgumentParser(description="Train UNet on MRC and masks")
     parser.add_argument('--mrc_dir', type=str, required=True, help='Path to MRC images directory')
     parser.add_argument('--mask_dir', type=str, required=True, help='Path to MRC mask directory')
@@ -322,7 +319,6 @@ def main():
     parser.add_argument('--gpu', type=int, default=0, help='GPU id to use')
     args = parser.parse_args()
 
-    # 2. 获取参数
     mrc_dir = args.mrc_dir
     mask_dir = args.mask_dir
     output_dir = args.output_dir
@@ -331,7 +327,7 @@ def main():
     device = torch.device(f"cuda:{args.gpu}" if torch.cuda.is_available() else "cpu")
 
     if args.predict:
-        # 只预测，不训练
+        # only predict, dont train
         assert args.predict_dir is not None, "You must specify --predict_dir when using --predict."
         model = UNetFull()
         model.load_state_dict(torch.load(args.model_path, map_location=device))
@@ -343,16 +339,16 @@ def main():
             device=device
         )
     else:
-        # 正常训练流程
+        # training pipeline
         assert args.mrc_dir is not None and args.mask_dir is not None, "You must specify --mrc_dir and --mask_dir when training."
         
-        # 3. 定义数据增强
+        # data augmentation
         train_transform = A.Compose([
         A.RandomRotate90(),
         A.HorizontalFlip(),
         A.VerticalFlip(),
         A.RandomBrightnessContrast(brightness_limit=0.2, contrast_limit=0.2, p=1.0),
-        A.Normalize(mean=(0.0,), std=(1.0,)),  # 如果是灰度图像，指定通道均值和标准差
+        A.Normalize(mean=(0.0,), std=(1.0,)),  
         ToTensorV2(),
         ])
         
@@ -363,7 +359,7 @@ def main():
     
     
     
-        # 4. 数据加载
+        # data loader
         dataset = VesicleDataset(mrc_dir, mask_dir)
         train_size = int(0.8 * len(dataset))
         val_size = len(dataset) - train_size
@@ -371,15 +367,15 @@ def main():
 
         train_dataset = torch.utils.data.Subset(VesicleDataset(mrc_dir, mask_dir, transform=train_transform), train_indices)
         val_dataset = torch.utils.data.Subset(VesicleDataset(mrc_dir, mask_dir, transform=val_transform), val_indices)
-        print(f"训练集总样本数: {len(train_dataset)}")
+        print(f"Total training samples: {len(train_dataset)}")
         
         train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
         val_loader = DataLoader(val_dataset, batch_size=batch_size, shuffle=False)
-        print("验证集图像文件:")
+        print("Validation image files:")
         for i in val_dataset.indices:
             print(os.path.basename(val_dataset.dataset.mrc_paths[i]))
         
-        # 计算 pos_weight
+        #  pos_weight
         '''
         total_pos = 0
         total_neg = 0
@@ -390,7 +386,7 @@ def main():
         '''
         pos_weight_tensor = torch.tensor([4], device=device)
         
-        # 4. 模型训练与预测
+        # model train and predict
         model = UNetFull()
         train(model, train_loader, val_loader, device, epochs=epochs, pos_weight=pos_weight_tensor)
         model.load_state_dict(torch.load("unet_model.pth"))
