@@ -166,7 +166,7 @@ output_star filtered_particles.star   ## same format with the input star
 
 `angle_thresh` Relates to the tilt of membrane proteins within the membrane. See Results and Methods in the paper for settings.
 
-`distance_from_mem` This value is negative for membrane proteins anchored inward toward the vesicle lumen, and positive for proteins anchored outward from the vesicle. The value can be calculated using `isSPA_vesicle_distance_measure_tool.py`. It defines the distance between the box center of the 3D particle‑picking template and the membrane surface on the protein-facing side. 单位为pixels。
+`distance_from_mem` This value is negative for membrane proteins anchored inward toward the vesicle lumen, and positive for proteins anchored outward from the vesicle. The value can be calculated using `isSPA_vesicle_distance_measure_tool.py`. It defines the distance (in pixels) between the box center of the 3D particle‑picking template and the membrane surface on the protein-facing side. 
 
 `euler_ori` {1,-1} 1: initial template ECD region faces the viewer; -1: transmembrane region faces the viewer (in Chimera)
 
@@ -192,12 +192,8 @@ stack_1st_0001.mrc	image_size=3710,3838	center=3247.40,121.90	radius=194.90,114.
 
 The first column of the two files shows `stack_xxx_xxxx.mrc` as the shared filename segment. So, `--prefix stack`  `--suffix ""` are suitable.
 
-
-
 Vesicle geometry-based particle filtering is now complete! The output STAR file retains the same format as the input STAR file and is ready for downstream processing.
 
 ## 4. Example Data and trained AI model
 
 Download the test datasets from Zenodo (DOI: [10.5281/zenodo.23470674](https://doi.org/10.5281/zenodo.23470674)) and the trained AI model from Zenodo (DOI: [10.5281/zenodo.23444711](https://doi.org/10.5281/zenodo.23444711)).
-
-## 5. Citation
