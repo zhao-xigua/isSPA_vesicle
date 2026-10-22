@@ -46,7 +46,7 @@ relion_convert_star --i isSPA_particles_rln30.star --o isSPA_particles_rln31.sta
 
 2. The converted STAR file in RELION 3.1 format should contain the `_rlnImageSize` tag, as shown below:
 
-![relion31_star](.\images\rln_star.jpg)
+![relion31_star](.\images\rln31_star.jpg)
 
 If this tag is missing, it needs to be added manually.
 
