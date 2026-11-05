@@ -118,6 +118,6 @@ Among the four files provided to this script, the first three are inputs; the sc
 
 ## 5. Citation
 
-BBR :
+1. If you use the isSPA-vesicle package, please cite the following paper: (M. Zhao *et al.*, isSPA-vesicle: AI assisted structure determination of membrane proteins on vesicles.) DOI：https://doi.org/10.1073/pnas.2620173123
 
-Zhu, Dongjie, et al. "Pushing the resolution limit by correcting the Ewald sphere effect in single-particle Cryo-EM reconstructions." *Nature communications* 9.1 (2018): 1552.
+2. If you use the BBR package, please cite the following paper: Zhu, Dongjie, et al. "Pushing the resolution limit by correcting the Ewald sphere effect in single-particle Cryo-EM reconstructions." *Nature communications* 9.1 (2018): 1552.
