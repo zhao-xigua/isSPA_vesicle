@@ -18,7 +18,9 @@ associated scripts:
 
 ## 2. Installation
 
-We recommend creating an isolated virtual environment to avoid conflicts with existing Python environments on your machine. Below are `conda` environment setup instructions. 
+Download the `isSPA_vesicle-v0.0.3.zip` software package. Inside this package, the `requiremnets.txt` file lists the environmental dependencies for this software.
+
+ We recommend creating an isolated virtual environment to avoid conflicts with existing Python environments on your machine. Below are `conda` environment setup instructions. 
 
 ```shell
 conda create -n isSPA_vesicle python=3.10 -y
@@ -62,6 +64,17 @@ Mask Name: Enter the rootname without file extension
 ![GUI_image](images/GUI_cut_from_zmj_destop.png)
 
 ![GUI_zoom](images/GUI_zoom.png)
+
+When annotating edge vesicles, if vesicle regions extend into the image padding area where vesicles are not expected, the following script can be used to remove these edge vesicle pixels (optional).
+
+```
+python isSPA_vesicle_edit_mask.py 
+--input mask.mrc 
+--output mask_edit.mrc 
+--size 409 409
+```
+
+The value provided to `--size` corresponds to the size of the bin10 image.
 
 ### 3.3 AI Model Train (optional)
 
@@ -197,3 +210,10 @@ Vesicle geometry-based particle filtering is now complete! The output STAR file 
 ## 4. Example Data and trained AI model
 
 Download the test datasets from Zenodo (DOI: [10.5281/zenodo.23470674](https://doi.org/10.5281/zenodo.23470674)) and the trained AI model from Zenodo (DOI: [10.5281/zenodo.23444711](https://doi.org/10.5281/zenodo.23444711)).
+
+## 5. Citation
+
+1. If you use the isSPA-vesicle package, please cite this paper: (M. Zhao *et al.*, isSPA-vesicle: AI assisted structure determination of membrane proteins on vesicles.) DOI：https://doi.org/10.1073/pnas.2620173123
+
+2. If you also use isSPA, please cite the following paper: 
+   ( J. Cheng, B. Li, L. Si, X. Zhang, Determining structures in a native environment using single-particle cryoelectron microscopy images; J. Cheng *et al.*, Determining protein structures in cellular lamella at pseudo-atomic resolution by GisSPA)
